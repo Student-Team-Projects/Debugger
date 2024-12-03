@@ -91,6 +91,8 @@ void writePackage(map<string, ofstream> &pidMap, char *buf, bool isError)
         if (line == END_OUT)
             continue;
 
+        //cout<<line<<endl;
+
         if (pidMap.find(pid) == pidMap.end())
         {
             pidMap[pid].open("result_" + pid + ".html", ios::out | ios::trunc);

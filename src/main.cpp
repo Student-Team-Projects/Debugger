@@ -10,6 +10,9 @@
 
 using namespace std;
 
+void sendPacket(bool, bool &, char *, char *);
+void getPacket(bool, bool &, char[], map<string, ofstream>);
+
 int rootProcess()
 {
     map<string, ofstream> pids;
@@ -36,22 +39,11 @@ int rootProcess()
 
         if (!out_ended && FD_ISSET(FD_OUT, &read_fds))
         {
-            memset(buf, 0, sizeof(buf));
-            rbytes = read(FD_OUT, buf, BUF_SIZE);
-            if (rbytes <= 0)
-                out_ended = true;
-            else
-                writePackage(pids, buf, false);
+            getPacket(false, out_ended, buf, pids);
         }
-
         if (!err_ended && FD_ISSET(FD_ERR, &read_fds))
         {
-            memset(buf, 0, sizeof(buf));
-            rbytes = read(FD_ERR, buf, BUF_SIZE);
-            if (rbytes <= 0)
-                err_ended = true;
-            else
-                writePackage(pids, buf, true);
+            getPacket(true, err_ended, buf, pids);
         }
     }
 
@@ -59,8 +51,6 @@ int rootProcess()
         v.close();
     return 0;
 }
-
-void sendPacket(bool&, char*, char *);
 
 int childProcess(char *program, char *argv[])
 {
@@ -107,35 +97,48 @@ int childProcess(char *program, char *argv[])
 
         if (!out_ended && FD_ISSET(FD_OUT, &read_fds))
         {
-            sendPacket(FD_OUT, out_ended, buf, program);
+            sendPacket(false, out_ended, buf, program);
         }
 
         if (!err_ended && FD_ISSET(FD_ERR, &read_fds))
         {
-            sendPacket(FD_ERR, err_ended, buf, program);
+            sendPacket(true, err_ended, buf, program);
         }
     }
     return 0;
 }
 
-void sendPacket(int fd, bool& input_ended, char* buf, char* program_name){
+void sendPacket(bool isError, bool &input_ended, char *buf, char *program_name)
+{
 
     auto now = chrono::system_clock::now();
     auto currentTime = chrono::duration_cast<chrono::milliseconds>(now.time_since_epoch()).count();
 
     string pref = BEGIN_OUT + string("\n") + to_string(getpid()) + "\n" + program_name + '\n' + to_string(currentTime) + "\n", suf = END_OUT + string("\n");
-    
-    int rbytes = read(fd, buf + pref.size(), BUF_SIZE);
+
+    int read_fd = isError ? FD_ERR : FD_OUT;
+    int write_fd = isError ? STDERR_FILENO : STDOUT_FILENO;
+    int rbytes = read(read_fd, buf + pref.size(), BUF_SIZE);
     if (rbytes <= 0)
         input_ended = true;
     else
     {
         memcpy(buf, pref.c_str(), pref.size());                      // copy prefix
         memcpy(buf + rbytes + pref.size(), suf.c_str(), suf.size()); // copy suffix
-        write(STDOUT_FILENO, buf, pref.size() + rbytes + suf.size());
+        write(write_fd, buf, pref.size() + rbytes + suf.size());
     }
 }
 
+void getPacket(bool isError, bool &input_ended, char buf[], map<string, ofstream> pids)
+{
+    memset(buf, 0, sizeof(buf));
+    int read_fd = isError ? FD_ERR : FD_OUT;
+    int rbytes = read(read_fd, buf, BUF_SIZE);
+    if (rbytes <= 0)
+        input_ended = true;
+    else
+        writePackage(pids, buf, isError);
+}
 
 int main(int, char *argv[])
 {
