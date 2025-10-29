@@ -43,7 +43,8 @@ int rootProcess(pid_t child_pid) {
     if (static_filename) {
         dataMap[to_string(child_pid)] = static_filename;
     }
-
+    const static char* RED = "\x1B[31m";
+    const static char* RESET =  "\x1B[0m";
     auto proc = [&streamMap, &dataMap](int size, char* buf, int fd) {
         if (size == sizeof(package_header)) return; // empty log early return;
         parse_buffer(streamMap, dataMap, buf, fd == STDERR_FILENO, size);

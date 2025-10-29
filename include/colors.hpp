@@ -6,11 +6,46 @@
  * (at your option) any later version.
  */
 
-#define RED   "\x1B[31m"
-#define GRN   "\x1B[32m"
-#define YEL   "\x1B[33m"
-#define BLU   "\x1B[34m"
-#define MAG   "\x1B[35m"
-#define CYN   "\x1B[36m"
-#define WHT   "\x1B[37m"
-#define RESET "\x1B[0m"
+#ifndef COLORS_HPP
+#define COLORS_HPP
+#include <string>
+#include <vector>
+
+enum color_value {
+    black,
+    red,
+    green,
+    yellow,
+    blue,
+    purple,
+    cyan,
+    white
+};
+
+enum color_style {
+    unset,
+    basic,
+    bright
+};
+
+struct color {
+    color_value c;
+    color_style s;
+};
+
+struct font_spec {
+    bool bold=false, faint=false, italic=false, underline=false,
+            blink=false, inverse=false, conceal=false, strike=false;
+};
+
+struct setting {
+    color foreground = {white, unset};
+    color background = {black, unset};
+    font_spec font = {};
+    void reset();
+};
+
+std::string get_html(const std::string& log, const setting& style);
+setting get_settings(const std::vector<int>& codes);
+std::vector<std::tuple<int, int, std::vector<int>>> parse_params(const std::string& s);
+#endif

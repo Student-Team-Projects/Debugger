@@ -14,6 +14,7 @@
 #include "const.hpp"
 #include "utilz.hpp"
 #include "log_writer.hpp"
+#include "colors.hpp"
 
 using namespace std;
 
@@ -54,6 +55,8 @@ void writeHeader(ofstream& result, string program_name, string pid) {
     result.flush();
 }
 
+setting current_setting = {};
+
 void writeLine(ofstream& result, string line, string timeStr, bool isError) {
     long long milliseconds = stoll(timeStr);
     auto duration = chrono::milliseconds(milliseconds);
@@ -62,11 +65,29 @@ void writeLine(ofstream& result, string line, string timeStr, bool isError) {
 
     result << "<tr><td class=\"entry-time\">";
     result << put_time(localtime(&time), "%Y-%m-%d %H:%M:%S");
+    result << "</td><td><td>&nbsp;</td><td>";
     if (isError)
-        result << "</td><td>&nbsp;</td><td class=\"entry-log entry-stderr\">";
-    else
-        result << "</td><td>&nbsp;</td><td class=\"entry-log entry-stdout\">";
-    result << line;
+        line = "\x1B[31m" + line + "\x1B[0m";
+    auto params = parse_params(line);
+    std::string cat;
+    if(params.empty()) {
+        cat += get_html(line, current_setting);
+    } else {
+        int i = 0;
+        for (const tuple<int, int, vector<int>>& entry:params) {
+            int j = get<0>(entry);
+            int k = get<1>(entry);
+            std::string substr = line.substr(i, j - i);
+            if(!substr.empty()) cat += get_html(substr, current_setting);
+            current_setting = get_settings(get<2>(entry));
+            i = k;
+        }
+        size_t n = line.length();
+        std::string substr = line.substr(i, n - i);
+        if(!substr.empty())
+        cat += get_html(substr, current_setting);
+    }
+    result << cat;
     result << "</td></tr>\n";
     result.flush();
 }
