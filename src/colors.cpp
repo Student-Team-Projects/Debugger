@@ -93,9 +93,9 @@ std::string get_color(const color& c) {
 
 std::string get_html(const std::string& log, const setting& style) {
     std::ostringstream oss;
-    oss << "<td style=\"color:" << get_color(style.foreground) << "\">";
+    oss << "<span style=\"color:" << get_color(style.foreground) << "\">";
     oss << log;
-    oss << "</td>";
+    oss << "</span>";
     return oss.str();
 }
 

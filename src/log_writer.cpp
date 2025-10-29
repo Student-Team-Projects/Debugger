@@ -65,7 +65,7 @@ void writeLine(ofstream& result, string line, string timeStr, bool isError) {
 
     result << "<tr><td class=\"entry-time\">";
     result << put_time(localtime(&time), "%Y-%m-%d %H:%M:%S");
-    result << "</td><td><td>&nbsp;</td><td>";
+    result << "</td><td><td>&nbsp;</td><td><table style=\"border-collapse:collapse; border-spacing:0\">";
     if (isError)
         line = "\x1B[31m" + line + "\x1B[0m";
     auto params = parse_params(line);
@@ -88,7 +88,7 @@ void writeLine(ofstream& result, string line, string timeStr, bool isError) {
         cat += get_html(substr, current_setting);
     }
     result << cat;
-    result << "</td></tr>\n";
+    result << "</table></td></tr>\n";
     result.flush();
 }
 
