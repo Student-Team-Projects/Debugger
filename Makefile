@@ -1,4 +1,4 @@
-CXX_DEFAULT ?= g++
+CXX_DEFAULT ?= g++-15
 CXX := $(CXX_DEFAULT)
 CXXFLAGS = -Wall -Wextra -I$(INC_DIR) -std=c++20 -O3 # do not change to := , lazy evaluating INC_DIR
 
