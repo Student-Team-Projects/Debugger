@@ -11,7 +11,7 @@ NC='\033[0m'
 
 echo -e "${RED}normal red${GREEN} normal green"
 echo -e "normal green returns${NC}"
->&2 echo -e "${RED}error red${NC}"
+>&2 echo -e "${RED}error red"
 echo -e "${GREEN}normal green${NC}"
 >&2 echo -e "${GREEN}error green${NC}"
 echo -e "${BLUE}normal blue${NC}"

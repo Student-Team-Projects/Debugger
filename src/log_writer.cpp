@@ -67,7 +67,9 @@ void writeHeader(ofstream& result, string program_name, string pid, string paren
     result.flush();
 }
 
-setting current_setting = {};
+setting current_setting_normal = {}, current_setting_error = {
+        {red, unset}
+};
 
 void writeLine(ofstream& result, string line, string timeStr, bool isError) {
     long long milliseconds = stoll(timeStr);
@@ -78,9 +80,9 @@ void writeLine(ofstream& result, string line, string timeStr, bool isError) {
     result << "<tr><td class=\"entry-time\">";
     result << put_time(localtime(&time), "%Y-%m-%d %H:%M:%S");
     result << "</td><td><td>&nbsp;</td><td><table style=\"border-collapse:collapse; border-spacing:0\">";
-    if (isError)
-        line = "\x1B[31m" + line + "\x1B[0m";
+
     auto params = parse_params(line);
+    setting& current_setting = (!isError) ? current_setting_normal : current_setting_error;
     std::string cat;
     if(params.empty()) {
         cat += get_html(line, current_setting);
