@@ -6,10 +6,11 @@
  * (at your option) any later version.
  */
 
-#include<iomanip>
+#include <iomanip>
 #include <pwd.h>
 #include <unistd.h>
 #include <fstream>
+#include <climits> 
 
 #include "const.hpp"
 #include "utilz.hpp"
@@ -18,9 +19,31 @@
 
 using namespace std;
 
+string getAccount() {
+    char hostname[256];
+    gethostname(hostname, sizeof(hostname));
+    struct passwd *pw = getpwuid(getuid());
+    return string(pw ? pw->pw_name : "unknown") + "@" + string(hostname);
+}
+
+string getPath() {
+    char cwd[PATH_MAX];
+    return (getcwd(cwd, sizeof(cwd)) != NULL) ? string(cwd) : "";
+}
+
 void writeHeader(ofstream& result, string program_name, string pid, string parent_pid, string parent_filename) {
     auto now = chrono::system_clock::now();
     auto time = chrono::system_clock::to_time_t(now);
+    
+    string account_info = getAccount();
+    string start_path = getPath();
+
+    char hostname[256];
+    gethostname(hostname, sizeof(hostname));
+    struct passwd *pw = getpwuid(getuid());
+    string user_name = (pw) ? pw->pw_name : "unknown";
+    string user_index_link = "../" + string(hostname) + "/" + user_name + "/index.html";
+
     result << R"(
 <!DOCTYPE html>
 <html lang="pl-PL">
@@ -32,18 +55,38 @@ void writeHeader(ofstream& result, string program_name, string pid, string paren
 </head>
 <body>
 <div class="head">
+)";
+
+    if (parent_pid != "0" && !parent_filename.empty()) {
+        result << R"(
+<div class="info">
+<span class="info-title">from account:</span>
+<span class="info-value">)" << account_info << R"(</span>
+</div>
+<div class="info">
+<span class="info-title">from command:</span>
+<span class="info-value info-value-path"><a href=")" << parent_filename.substr(1) << R"(">)" << parent_pid << R"(</a></span>
+</div>
+)";
+    }
+
+    result << R"(
+<div class="info">
+<span class="info-title">account:</span>
+<span class="info-value"><a href=")" << user_index_link << R"(">)" << account_info << R"(</a></span>
+</div>
+<div class="info">
+<span class="info-title">start path:</span>
+<span class="info-value">)" << start_path << R"(</span>
+</div>
 <div class="info">
 <span class="info-title">command:</span>
 <span class="info-value info-value-path">)" << program_name << R"(</span>
 </div>
 <div class="info">
-<span class="info-title">start time:</span>
-<span class="info-value">)" << put_time(localtime(&time), "%Y-%m-%d %H:%M:%S") << R"(</span>
-</div>
-<div class="info">
 <span class="info-title">parent process:</span>
 <span class="info-value">)";
-    
+
     if (parent_pid != "0" && !parent_filename.empty()) {
         result << R"(<a href=")" << parent_filename.substr(1) << R"(">)" << parent_pid << R"(</a>)";
     } else {
@@ -51,6 +94,10 @@ void writeHeader(ofstream& result, string program_name, string pid, string paren
     }
     
     result << R"(</span>
+</div>
+<div class="info">
+<span class="info-title">start time:</span>
+<span class="info-value">)" << put_time(localtime(&time), "%Y-%m-%d %H:%M:%S") << R"(</span>
 </div>
 <div class="info">
 <span class="info-title">last entry:</span> <span class="info-value" id="last_entry"></span>
@@ -128,11 +175,11 @@ void registerLink(string timeStr, string /*pid*/, string name, string file_name)
     char hostname[256];
     gethostname(hostname, sizeof(hostname));
     struct passwd *pw = getpwuid(getuid());
-    char* user_name = pw->pw_name;
+    // char* user_name = pw->pw_name; 
 
     string debugger_path = getOutputPath();
 
-    ofstream res(debugger_path + "/" + hostname + "/" + user_name  + "/index.html", std::ios::app);
+    ofstream res(debugger_path + "/" + hostname + "/" + pw->pw_name  + "/index.html", std::ios::app);
     res << "<tr><td class=\"entry-time\">";
     res << put_time(localtime(&time), "%Y-%m-%d %H:%M:%S");
     res << "</td><td>&nbsp;</td><td class=\"entry-log entry-link\"><a href=" << debugger_path + "/all_logs" + file_name << ">" << name << " </a></td></tr>\n";
