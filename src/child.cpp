@@ -30,7 +30,7 @@ static void process(int size, char* buf, int fd, pid_t pid) {
     package_header head;
     memcpy(&head, buf, sizeof(package_header));
 
-    if (size < sizeof(package_header) || head.header_key != HEADER_CONST) { // new line creating header
+    if (size < (int)sizeof(package_header) || head.header_key != HEADER_CONST) { // new line creating header
         auto now = chrono::system_clock::now();
         auto currentTime = chrono::duration_cast<chrono::milliseconds>(now.time_since_epoch()).count();
 
@@ -40,7 +40,10 @@ static void process(int size, char* buf, int fd, pid_t pid) {
         head.parent_pid = 0;
         head.header_key = HEADER_CONST;
 
-        write(fd, &head, sizeof(package_header));
+        if (write(fd, &head, sizeof(package_header)) < 0) {
+            perror("write failed");
+            exit(1);
+        }
     } else { // line with a header
         if (head.parent_pid == 0) { // line without parent
             head.parent_pid = getpid();
@@ -48,7 +51,10 @@ static void process(int size, char* buf, int fd, pid_t pid) {
             memcpy(buf, &head, sizeof(package_header));
         }
     }
-    write(fd, buf, size);
+    if (write(fd, buf, size) < 0) {
+        perror("write failed");
+        exit(1);
+    }
 }
 
 static void writeInfoToTmpFiles(pid_t pid, pid_t child_pid) {
@@ -66,8 +72,8 @@ static void writeInfoToTmpFiles(pid_t pid, pid_t child_pid) {
 int childProcess(char* program, char* argv[]) {
     // create pipe LISTENER <- PROGRAM
     int pipe_fd_out[2], pipe_fd_err[2];
-    pipe(pipe_fd_out);
-    pipe(pipe_fd_err);
+    [[maybe_unused]] int ret1 = pipe(pipe_fd_out);
+    [[maybe_unused]] int ret2 = pipe(pipe_fd_err);
 
     pid_t fork_pid = fork();
     if (fork_pid == 0) {
@@ -77,8 +83,14 @@ int childProcess(char* program, char* argv[]) {
         dup2(pipe_fd_out[1], STDOUT_FILENO);
         dup2(pipe_fd_err[1], STDERR_FILENO);
 
-        write(STDOUT_FILENO, program, strlen(program));
-        write(STDOUT_FILENO, "\n", 1);
+        if (write(STDOUT_FILENO, program, strlen(program)) < 0) {
+            perror("write failed");
+            exit(1);
+        }
+        if (write(STDOUT_FILENO, "\n", 1) < 0) {
+            perror("write failed");
+            exit(1);
+        }
 
         execvp(program, argv);
     }

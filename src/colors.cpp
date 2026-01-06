@@ -88,6 +88,8 @@ std::string get_color(const color& c) {
             return "cyan";
         case white:
             return "white";
+        default:
+            return "";
     }
 }
 

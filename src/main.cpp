@@ -48,9 +48,19 @@ int rootProcess(pid_t child_pid) {
     auto proc = [&streamMap, &dataMap](int size, char* buf, int fd) {
         if (size == sizeof(package_header)) return; // empty log early return;
         parse_buffer(streamMap, dataMap, buf, fd == STDERR_FILENO, size);
-        if (fd == STDERR_FILENO) write(fd, RED, 6);
-        write(fd, buf + sizeof(package_header), size - sizeof(package_header));
-        if (fd == STDERR_FILENO) write(fd, RESET, 5);
+        if (fd == STDERR_FILENO) {
+            if (write(fd, RED, 6) < 0) {
+                perror("write failed");
+            }
+        }
+        if (write(fd, buf + sizeof(package_header), size - sizeof(package_header)) < 0) {
+            perror("write failed");
+        }
+        if (fd == STDERR_FILENO) {
+            if (write(fd, RESET, 5) < 0) {
+                perror("write failed");
+            }
+        }
         };
 
     listen_on_fds(proc);
@@ -92,8 +102,14 @@ int main(int argc, char* argv[]) {
 
         // create pipe ROOT <- LISTENER 1
         int pipe_fd_out[2], pipe_fd_err[2];
-        pipe(pipe_fd_out);
-        pipe(pipe_fd_err);
+        if (pipe(pipe_fd_out) < 0) {
+            perror("pipe failed");
+            exit(1);
+        }
+        if (pipe(pipe_fd_err) < 0) {
+            perror("pipe failed");
+            exit(1);
+        }
 
         pid_t pid = fork();
         if (pid != 0) {

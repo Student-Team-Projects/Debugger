@@ -35,9 +35,18 @@ void callhandlerProcess(char* program, char* argv[]) {
     head.parent_pid = 0;
     head.time = currentTime;
 
-    write(STDOUT_FILENO, &head, sizeof(package_header));
-    write(STDOUT_FILENO, filename.c_str(), filename.size());
-    write(STDOUT_FILENO, "\n", 1);
+    if (write(STDOUT_FILENO, &head, sizeof(package_header)) < 0) {
+        perror("write failed");
+        exit(1);
+    }
+    if (write(STDOUT_FILENO, filename.c_str(), filename.size()) < 0) {
+        perror("write failed");
+        exit(1);
+    }
+    if (write(STDOUT_FILENO, "\n", 1) < 0) {
+        perror("write failed");
+        exit(1);
+    }
 
     execvp(program, argv);
 }

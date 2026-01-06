@@ -104,7 +104,7 @@ void writeLine(ofstream& result, string line, string timeStr, bool isError) {
     result.flush();
 }
 
-void writeLink(ofstream& result, string timeStr, string pid, string name, string file_name) {
+void writeLink(ofstream& result, string timeStr, string /*pid*/, string name, string file_name) {
     long long milliseconds = stoll(timeStr);
     auto duration = chrono::milliseconds(milliseconds);
     auto time_point = chrono::system_clock::time_point(duration);
@@ -117,7 +117,7 @@ void writeLink(ofstream& result, string timeStr, string pid, string name, string
     result << "</td><td>&nbsp;</td><td class=\"entry-log entry-link\"><a href=" << debugger_path + "/all_logs" + file_name << ">" << name << " </a></td></tr>\n";
 }
 
-void registerLink(string timeStr, string pid, string name, string file_name) {
+void registerLink(string timeStr, string /*pid*/, string name, string file_name) {
     long long milliseconds = stoll(timeStr);
     auto duration = chrono::milliseconds(milliseconds);
     auto time_point = chrono::system_clock::time_point(duration);
