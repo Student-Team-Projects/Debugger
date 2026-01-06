@@ -16,7 +16,7 @@
 
 using namespace std;
 
-void writeHeader(ofstream& file_strem, string program_name, string filename);
+void writeHeader(ofstream& file_strem, string program_name, string filename, string parent_pid, string parent_filename = "");
 
 void writeLine(ofstream& file_stream, string line, string time_str, bool is_error);
 

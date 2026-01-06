@@ -10,6 +10,7 @@
 #define COLORS_HPP
 #include <string>
 #include <vector>
+#include <tuple>
 
 enum color_value {
     black,

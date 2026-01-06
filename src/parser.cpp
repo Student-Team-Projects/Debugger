@@ -55,7 +55,16 @@ void parse_buffer(map<string, ofstream>& streamMap, map<string, string>& dataMap
 
             string path = debugger_path + "/all_logs" + file_name;
             streamMap[pid].open(path, ios::out | ios::trunc);
-            writeHeader(streamMap[pid], line, pid);
+            
+            string parent_filename;
+
+            if (dataMap.find(ppid) != dataMap.end()) {
+                parent_filename = dataMap[ppid];
+            } else {
+                parent_filename = "";
+            }
+
+            writeHeader(streamMap[pid], line, pid, ppid, parent_filename);
             writeLink(streamMap[ppid], time, pid, line, file_name);
             return;
         }

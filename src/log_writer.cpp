@@ -18,7 +18,7 @@
 
 using namespace std;
 
-void writeHeader(ofstream& result, string program_name, string pid) {
+void writeHeader(ofstream& result, string program_name, string pid, string parent_pid, string parent_filename) {
     auto now = chrono::system_clock::now();
     auto time = chrono::system_clock::to_time_t(now);
     result << R"(
@@ -39,6 +39,18 @@ void writeHeader(ofstream& result, string program_name, string pid) {
 <div class="info">
 <span class="info-title">start time:</span>
 <span class="info-value">)" << put_time(localtime(&time), "%Y-%m-%d %H:%M:%S") << R"(</span>
+</div>
+<div class="info">
+<span class="info-title">parent process:</span>
+<span class="info-value">)";
+    
+    if (parent_pid != "0" && !parent_filename.empty()) {
+        result << R"(<a href=")" << parent_filename.substr(1) << R"(">)" << parent_pid << R"(</a>)";
+    } else {
+        result << parent_pid;
+    }
+    
+    result << R"(</span>
 </div>
 <div class="info">
 <span class="info-title">last entry:</span> <span class="info-value" id="last_entry"></span>
