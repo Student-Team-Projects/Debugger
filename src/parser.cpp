@@ -27,12 +27,8 @@ using namespace std;
 void parse_buffer(map<string, ofstream>& streamMap, map<string, string>& dataMap, char* buf, bool isError, int end) {
     string pid, ppid, name, time;
     package_header head;
-    char tmp[BUF_SIZE];
 
     memcpy(&head, buf, sizeof(package_header));
-    memcpy(tmp, buf + sizeof(package_header), end - sizeof(package_header));
-    tmp[end - sizeof(package_header)] = 0;
-    string line(tmp);
     pid = to_string(head.pid);
     ppid = to_string(head.parent_pid);
     time = to_string(head.time);
@@ -40,6 +36,11 @@ void parse_buffer(map<string, ofstream>& streamMap, map<string, string>& dataMap
     static bool firstOccurence = true;
 
     if (head.type == 0) {
+        char tmp[BUF_SIZE];
+        memcpy(tmp, buf + sizeof(package_header), end - sizeof(package_header));
+        tmp[end - sizeof(package_header)] = 0;
+        string line(tmp);
+
         if (streamMap.find(pid) == streamMap.end()) {
             if (dataMap.find(pid) == dataMap.end()) {
                 dataMap[pid] = get_file_name(time, line, pid);
@@ -71,8 +72,18 @@ void parse_buffer(map<string, ofstream>& streamMap, map<string, string>& dataMap
         ofstream& s = streamMap[pid];
         writeLine(s, line, time, isError);
     } else {
-        string filename = head.type == 1 ? line : (dataMap[pid]);
-        writeLink(streamMap[ppid], time, pid, "link", filename);
+
+        if (head.type == 1) {
+            char tmp[BUF_SIZE], cmnd[BUF_SIZE];
+            memcpy(cmnd, buf + sizeof(package_header), head.command_length);
+            cmnd[head.command_length] = 0;
+            memcpy(tmp, buf + sizeof(package_header) + head.command_length,
+                   end - head.command_length - sizeof(package_header));
+            tmp[end - sizeof(package_header)] = 0;
+            string line(tmp), command(cmnd);
+            string filename = head.type == 1 ? line : (dataMap[pid]);
+            writeLink(streamMap[ppid], time, pid, cmnd, filename);
+        }
     }
 }
 

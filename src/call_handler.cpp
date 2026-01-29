@@ -10,9 +10,11 @@
 #include <stdlib.h>
 #include <string>
 #include <chrono>
+#include <cstring>
 
 #include "package_header.hpp"
 #include "parser.hpp"
+#include "utilz.hpp"
 
 using namespace std;
 using namespace chrono;
@@ -35,7 +37,15 @@ void callhandlerProcess(char* program, char* argv[]) {
     head.parent_pid = 0;
     head.time = currentTime;
 
+    std::string command = buildCommand(program, argv, false);
+
+    head.command_length = command.length();
+
     if (write(STDOUT_FILENO, &head, sizeof(package_header)) < 0) {
+        perror("write failed");
+        exit(1);
+    }
+    if (write(STDOUT_FILENO, command.c_str(), head.command_length) < 0) {
         perror("write failed");
         exit(1);
     }

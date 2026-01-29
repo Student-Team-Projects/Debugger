@@ -23,6 +23,7 @@
 #include "fds_listner.hpp"
 #include "log_writer.hpp"
 #include "package_header.hpp"
+#include "utilz.hpp"
 
 using namespace std;
 
@@ -39,7 +40,7 @@ static void process(int size, char* buf, int fd, pid_t pid) {
         head.pid = pid;
         head.parent_pid = 0;
         head.header_key = HEADER_CONST;
-
+        head.command_length = 0;
         if (write(fd, &head, sizeof(package_header)) < 0) {
             perror("write failed");
             exit(1);
@@ -83,7 +84,10 @@ int childProcess(char* program, char* argv[]) {
         dup2(pipe_fd_out[1], STDOUT_FILENO);
         dup2(pipe_fd_err[1], STDERR_FILENO);
 
-        if (write(STDOUT_FILENO, program, strlen(program)) < 0) {
+
+        std::string command = buildCommand(program, argv, false);
+
+        if (write(STDOUT_FILENO, command.c_str(), command.length()) < 0) {
             perror("write failed");
             exit(1);
         }

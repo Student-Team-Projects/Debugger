@@ -18,6 +18,7 @@ struct package_header {
     pid_t parent_pid;
     pid_t pid;
     int64_t time;
+    unsigned int command_length;
 };
 
 #endif // PACKAGE_HEADER_HPP
