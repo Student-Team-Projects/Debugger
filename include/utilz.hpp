@@ -14,6 +14,6 @@ std::string getOutputPath();
 void deleteContentOfDir(const std::string &path);
 void createStyles(const std::string &path);
 void createIndex(const std::string &path);
-std::string buildCommand(char* program, char* argv[], bool extractInner);
+std::string buildCommand(char* program, char* argv[]);
 
 #endif // UTILZ

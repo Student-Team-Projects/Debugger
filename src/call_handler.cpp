@@ -37,7 +37,7 @@ void callhandlerProcess(char* program, char* argv[]) {
     head.parent_pid = 0;
     head.time = currentTime;
 
-    std::string command = buildCommand(program, argv, false);
+    std::string command = buildCommand(program, argv);
 
     head.command_length = command.length();
 

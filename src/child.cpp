@@ -85,7 +85,7 @@ int childProcess(char* program, char* argv[]) {
         dup2(pipe_fd_err[1], STDERR_FILENO);
 
 
-        std::string command = buildCommand(program, argv, false);
+        std::string command = buildCommand(program, argv);
 
         if (write(STDOUT_FILENO, command.c_str(), command.length()) < 0) {
             perror("write failed");

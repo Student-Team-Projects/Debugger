@@ -300,27 +300,13 @@ void addLink(std::string index_path, std::string self_path, std::string name) {
   res.close();
 }
 
-std::string buildCommand(char* program, char* argv[], bool extractInner)
+std::string buildCommand(char* program, char* argv[])
 {
   if (!program || !argv)
     return "";
 
   std::string prog(program);
 
-  bool isBash =
-          prog == "bash" ||
-          prog.size() >= 5 && prog.substr(prog.size() - 5) == "/bash";
-
-  if (extractInner && isBash) {
-    for (int i = 1; argv[i]; ++i) {
-      if ((std::strcmp(argv[i], "-c") == 0 ||
-           std::strcmp(argv[i], "-C") == 0) &&
-          argv[i + 1])
-      {
-        return std::string(argv[i + 1]);
-      }
-    }
-  }
 
   std::ostringstream cmd;
   for (int i = 0; argv[i]; ++i) {
