@@ -31,7 +31,7 @@ string getPath() {
     return (getcwd(cwd, sizeof(cwd)) != NULL) ? string(cwd) : "";
 }
 
-void writeHeader(ofstream& result, string program_name, string pid, string parent_pid, string parent_filename) {
+void writeHeader(ofstream& result, string program_name, string pid, string parent_pid, string parent_filename, string parent_command) {
     auto now = chrono::system_clock::now();
     auto time = chrono::system_clock::to_time_t(now);
     
@@ -65,7 +65,7 @@ void writeHeader(ofstream& result, string program_name, string pid, string paren
 </div>
 <div class="info">
 <span class="info-title">from command:</span>
-<span class="info-value info-value-path"><a href=")" << parent_filename.substr(1) << R"(">)" << parent_pid << R"(</a></span>
+<span class="info-value info-value-path"><a href=")" << parent_filename.substr(1) << R"(">)" << parent_command << R"(</a></span>
 </div>
 )";
     }
@@ -191,7 +191,7 @@ void createJsFile(pid_t pid, int exit_code) {
     string debugger_path = getOutputPath();
     string path = debugger_path + "/all_logs/" + to_string(pid) + ".js";
 
-    auto now = chrono::system_clock::now(); // last entry
+    auto now = chrono::system_clock::now(); 
     auto time = chrono::system_clock::to_time_t(now);
 
     fstream js_file;

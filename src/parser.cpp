@@ -24,7 +24,7 @@
 
 using namespace std;
 
-void parse_buffer(map<string, ofstream>& streamMap, map<string, string>& dataMap, char* buf, bool isError, int end) {
+void parse_buffer(map<string, ofstream>& streamMap, map<string, string>& dataMap, map<string, string>& commandMap, char* buf, bool isError, int end) {
     string pid, ppid, name, time;
     package_header head;
 
@@ -44,6 +44,7 @@ void parse_buffer(map<string, ofstream>& streamMap, map<string, string>& dataMap
         if (streamMap.find(pid) == streamMap.end()) {
             if (dataMap.find(pid) == dataMap.end()) {
                 dataMap[pid] = get_file_name(time, line, pid);
+                commandMap[pid] = line;
             }
             string file_name = dataMap[pid];
 
@@ -58,14 +59,17 @@ void parse_buffer(map<string, ofstream>& streamMap, map<string, string>& dataMap
             streamMap[pid].open(path, ios::out | ios::trunc);
             
             string parent_filename;
+            string parent_command;
 
             if (dataMap.find(ppid) != dataMap.end()) {
                 parent_filename = dataMap[ppid];
+                parent_command = commandMap[ppid];
             } else {
                 parent_filename = "";
+                parent_command = "";
             }
 
-            writeHeader(streamMap[pid], line, pid, ppid, parent_filename);
+            writeHeader(streamMap[pid], line, pid, ppid, parent_filename, parent_command);
             writeLink(streamMap[ppid], time, pid, line, file_name);
             return;
         }

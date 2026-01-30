@@ -36,8 +36,10 @@ using namespace std;
 int rootProcess(pid_t child_pid) {
     map<string, ofstream> streamMap;
     map<string, string> dataMap;
+    map<string, string> commandMap;
     streamMap.clear();
     dataMap.clear();
+    commandMap.clear();
 
     char* static_filename = getenv(ENV_STATIC_FILENAME);
     if (static_filename) {
@@ -45,9 +47,9 @@ int rootProcess(pid_t child_pid) {
     }
     const static char* RED = "\x1B[31m";
     const static char* RESET =  "\x1B[0m";
-    auto proc = [&streamMap, &dataMap](int size, char* buf, int fd) {
-        if (size == sizeof(package_header)) return; // empty log early return;
-        parse_buffer(streamMap, dataMap, buf, fd == STDERR_FILENO, size);
+    auto proc = [&streamMap, &dataMap, &commandMap](int size, char* buf, int fd) {
+        if (size == sizeof(package_header)) return; 
+        parse_buffer(streamMap, dataMap, commandMap, buf, fd == STDERR_FILENO, size);
         if (fd == STDERR_FILENO) {
             if (write(fd, RED, 6) < 0) {
                 perror("write failed");
