@@ -166,7 +166,7 @@ void writeLink(ofstream& result, string timeStr, string /*pid*/, string name, st
     result << "</td><td>&nbsp;</td><td class=\"entry-log entry-link\"><a href=" << debugger_path + "/all_logs" + file_name << ">" << name << " </a></td></tr>\n";
 }
 
-void registerLink(string timeStr, string /*pid*/, string name, string file_name) {
+void registerLink(string timeStr, string pid, string name, string file_name) {
     long long milliseconds = stoll(timeStr);
     auto duration = chrono::milliseconds(milliseconds);
     auto time_point = chrono::system_clock::time_point(duration);
@@ -175,14 +175,18 @@ void registerLink(string timeStr, string /*pid*/, string name, string file_name)
     char hostname[256];
     gethostname(hostname, sizeof(hostname));
     struct passwd *pw = getpwuid(getuid());
-    // char* user_name = pw->pw_name; 
 
     string debugger_path = getOutputPath();
 
     ofstream res(debugger_path + "/" + hostname + "/" + pw->pw_name  + "/index.html", std::ios::app);
-    res << "<tr><td class=\"entry-time\">";
+    
+    res << "<tr><td class=\"entry-time\" style=\"padding-right: 15px;\">";
     res << put_time(localtime(&time), "%Y-%m-%d %H:%M:%S");
-    res << "</td><td>&nbsp;</td><td class=\"entry-log entry-link\"><a href=" << debugger_path + "/all_logs" + file_name << ">" << name << " </a></td></tr>\n";
+    res << "</td>";
+    res << "<td class=\"exitrun\" style=\"color: #bbaa00; font-weight: bold;\" id=\"index_exit_" << pid << "\">running</td>";
+    res << "<td>&nbsp;</td><td class=\"entry-log entry-link\"><a href=" << debugger_path + "/all_logs" + file_name << ">" << name << " </a></td></tr>\n";
+    res << "<script src=\"../../all_logs/" << pid << ".js\"></script>\n";
+
     res.flush();
     res.close();
 }
@@ -196,9 +200,23 @@ void createJsFile(pid_t pid, int exit_code) {
 
     fstream js_file;
     js_file.open(path, ios::out | ios::trunc);
-    js_file << R"(document.getElementById("exit_code").textContent=")" << exit_code << R"(";)"
-            << R"(document.getElementById("last_entry").textContent=")" << put_time(localtime(&time), "%Y-%m-%d %H:%M:%S") << R"(";)";
-            
-    if (exit_code) js_file << R"(document.getElementById("exit_code_wrapper").className="exiterr")";
-    else js_file << R"(document.getElementById("exit_code_wrapper").className="exitok")";
+
+    js_file << "var ec = document.getElementById('exit_code');";
+    js_file << "if (ec) {";
+    js_file << "  ec.textContent='" << exit_code << "';";
+    js_file << "  var ew = document.getElementById('exit_code_wrapper');";
+    js_file << "  if(ew) ew.className='" << ((exit_code == 0) ? "exitok" : "exiterr") << "';";
+    js_file << "}";
+
+    js_file << "var le = document.getElementById('last_entry');";
+    js_file << "if (le) le.textContent='" << put_time(localtime(&time), "%Y-%m-%d %H:%M:%S") << "';";
+
+    js_file << "var idx = document.getElementById('index_exit_" << pid << "');";
+    js_file << "if (idx) {";
+    js_file << "  idx.textContent='exit " << exit_code << "';";
+    
+    if (exit_code == 0) js_file << "  idx.className='exitok'; idx.style.color='#00aa00';";
+    else js_file << "  idx.className='exiterr'; idx.style.color='#aa0000';";
+    
+    js_file << "}";
 }

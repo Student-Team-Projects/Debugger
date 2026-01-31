@@ -17,6 +17,7 @@
 #include <fstream>
 #include <chrono>
 #include <iomanip>
+#include <signal.h>
 
 #include "const.hpp"
 #include "child.hpp"
@@ -63,8 +64,12 @@ static void writeInfoToTmpFiles(pid_t pid, pid_t child_pid) {
     pid_t wpid = waitpid(child_pid, &status, 0);
     
     int exitCode = -1;
-    if (wpid > 0 && WIFEXITED(status)) {
-       exitCode = WEXITSTATUS(status);
+    if (wpid > 0) {
+        if (WIFEXITED(status)) {
+            exitCode = WEXITSTATUS(status);
+        } else if (WIFSIGNALED(status)) {
+            exitCode = 128 + WTERMSIG(status);
+        }
     }
 
     createJsFile(pid, exitCode);
@@ -76,8 +81,13 @@ int childProcess(char* program, char* argv[]) {
     [[maybe_unused]] int ret1 = pipe(pipe_fd_out);
     [[maybe_unused]] int ret2 = pipe(pipe_fd_err);
 
+    // ignoring SIGINT to update error code
+    signal(SIGINT, SIG_IGN);
+
     pid_t fork_pid = fork();
     if (fork_pid == 0) {
+        signal(SIGINT, SIG_DFL);
+
         // PROGRAM -> LISTENER
         close(pipe_fd_out[0]);
         close(pipe_fd_err[0]);
