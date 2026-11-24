@@ -6,7 +6,7 @@ def fun1():
     global super
     super = 4
 
-from python_library.debug import debug
+from python_library.debug_old import debug
 debug_active_flag = True
 
 debug(fun1)()
